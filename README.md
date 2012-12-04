@@ -4,7 +4,7 @@ Description
 A script to automate the work you do in order to update your domain at http://iis.se/ for your Swedish domain names.
 The script will check your external IP address, navigate through http://iis.se/ and update your desired nameserver for a specific domain.
 
-DynDNS.com and No-Ip.org has similar scripts but gives you the same functionality to IIS.se.
+http://DynDNS.com and http://No-Ip.org has similar scripts but this script gives you the same functionality towards IIS.se.
 
 (I know that nameservers should have static IP's and there for never really need this,
 but some of us have a hobby-server in the basement, which might get a poweroutage or runs on a ADSL (or both),
