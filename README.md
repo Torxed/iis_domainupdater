@@ -74,7 +74,7 @@ Running as a CRON job
 2. Once those are set, do:
 <pre>~:# crontab -e</pre>
 
-3. and append:
+3. and append (to run every 5 minutes):
 <pre>*/5 * * * * /path/to/scrupt/iis_domainupdater.py</pre>
 
 4. and make sure you've started ( or in this case, restarted, the cron daemon )
