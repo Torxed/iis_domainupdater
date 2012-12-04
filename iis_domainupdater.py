@@ -82,6 +82,10 @@ if isfile('lastknown_ip_iis.conf'):
 	f = open('lastknown_ip_iis.conf', 'rb')
 	__lastknown__ = refstr(f.read())
 	f.close()
+if __lastknown__ and __lastknown__ == __externalIP__:
+		print ' - External IP matches the last known IP on IIS.se, aborting update'
+		sys.stdout.flush()
+		_exit(0)
 
 
 class nonblockingrecieve(Thread):
