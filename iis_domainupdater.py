@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import socket, ssl, re, sys
 from threading import *
 from os import _exit
