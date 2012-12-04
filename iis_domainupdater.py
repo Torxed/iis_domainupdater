@@ -11,8 +11,8 @@ from getpass import getpass
 ## = in case you run this script as a cron job (which, is a good idea)
 sys.stdout = open('/var/log/iis_domainupdater.log', 'ab')
 
-__date__ = '2012-12-04 23:35 CET'
-__version__ = 0.2
+__date__ = '2012-12-05 00:25 CET'
+__version__ = 0.3
 __author__ = 'Anton Hvornum - http://www.linkedin.com/profile/view?id=140957723'
 
 ## ================== Explanation of the different variables ===================
@@ -83,9 +83,9 @@ if isfile('lastknown_ip_iis.conf'):
 	__lastknown__ = refstr(f.read())
 	f.close()
 if __lastknown__ and __lastknown__ == __externalIP__:
-		print ' - External IP matches the last known IP on IIS.se, aborting update'
-		sys.stdout.flush()
-		_exit(0)
+	print ' - External IP matches the last known IP on IIS.se, aborting update'
+	sys.stdout.flush()
+	_exit(0)
 
 
 class nonblockingrecieve(Thread):
