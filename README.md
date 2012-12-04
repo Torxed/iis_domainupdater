@@ -66,6 +66,13 @@ root@host:# python iis_domainupdater.py
  - Skipping update, external IP is the regisitrered IP at iis.se
 </pre>
 
+<pre>
+root@host:# python iis_domainupdater.py
+2012-12-05 00:25:01 - Initated the script
+ - Got external IP: 10.133.55.23
+ - External IP matches the last known IP on IIS.se, ending the script
+</pre>
+
 Running as a CRON job
 =================
 
