@@ -95,14 +95,7 @@ class httplib():
 		if not self.sock:
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.sock = ssl.wrap_socket(s)
-		#									ca_certs="/etc/ca_certs_file",
-		#									cert_reqs=ssl.CERT_REQUIRED)
-
 			self.sock.connect((self.htmldata['host'], 443))
-
-		#	print repr(self.sock.getpeername())
-		#	print self.sock.cipher()
-		#	print str(self.sock.getpeercert())
 
 	def eatcookie(self, data):
 		cookie, trash = data.split(';',1)
@@ -163,21 +156,10 @@ class httplib():
 		self.sock = None
 
 	def postformat(self):
-		#outdata = ''
-		#if len(self.htmldata['form']) > 0:
-		#	for k, v in self.htmldata['form'].items():
-		#		outdata += k +'='+ v + '&'
-		#	outdata = outdata[:-1]
-
 		outdata = ''
 		for k, v in self.htmldata['form'].items():
 			outdata += k + '=' + quote_plus(v) + '&'
 		outdata = outdata[:-1]
-
-		# urlencode takes a dictionary {'key' : 'val'}
-		# and transforms it into a key=val&... string.
-		# quote_plus then takes that string and escapes all
-		# characters such as %, " ", etc into html friendly things.
 		return outdata
 
 	def navigate(self):
@@ -413,7 +395,7 @@ if __externalIP__ == currentRegisteredIp:
 else:
 	print ' - Updating nameserver ' + __nsserver__ + ' to ' + __externalIP__
 	http.htmldata = updatedata
-	#headers, data = http.navigate()
+	headers, data = http.navigate()
 
 	#f=open('dump.html', 'wb')
 	#f.write(data)
