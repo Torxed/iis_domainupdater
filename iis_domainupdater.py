@@ -11,7 +11,7 @@ from getpass import getpass
 ## = in case you run this script as a cron job (which, is a good idea)
 sys.stdout = open('/var/log/iis_domainupdater.log', 'ab')
 
-__date__ = '2012-12-05 00:29 CET'
+__date__ = '2012-12-05 00:34 CET'
 __version__ = 0.3
 __author__ = 'Anton Hvornum - http://www.linkedin.com/profile/view?id=140957723'
 
