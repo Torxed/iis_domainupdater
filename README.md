@@ -33,13 +33,13 @@ Configuration
 =================
 You can run the script as is, and you'll be promted for all the values needed.
 But if you plan on running this as a cron job (or otherwise as a reoccuring job) i'd suggest (example):
-[code]
+```python
     ___customerID___ = '12345678'
     ___customerPWD___ = r'my%sparse\pwd'
     ___domain___ = 'example.se'
     ___nsserver___ = 'ns1.example.se'
     ___externalIP___ = None # <- For autodetect
-[/code]
+```
 
 
 Example outputs
