@@ -17,6 +17,12 @@ TODO
 The script lacks a lot of error checks and is quite fragile to major changes to the IIS.se website structure.
 However the script has some sanity checks and will not spam IIS.se if there's no data to send or if the site is under maintenance.
 
+*Important:*
+Add TSL/SSL verifications to the certificate from the host,
+this to ensure that the certificate from the server is correct before we post any login credentials.
+As of now (just to get this working) the socket is a blocking socket (unblocked via a crappy threaded class) and
+the socket doesn't bother checking the certificate as long as it can establish a a connection!
+
 Add support for multiple nameservers? humm..
 
 The code is UGLY, i'm aware of that, started the work this morning and finished this evening and had time for real work.
