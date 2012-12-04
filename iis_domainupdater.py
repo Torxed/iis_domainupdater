@@ -6,7 +6,7 @@ from time import sleep, time, strftime
 from urllib import urlencode, quote_plus
 from getpass import getpass
 
-__date__ = '2012-12-04 21:15 CET'
+__date__ = '2012-12-04 21:52 CET'
 __version__ = 0.1
 __author__ = 'Anton Hvornum - http://www.linkedin.com/profile/view?id=140957723'
 
