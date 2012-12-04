@@ -29,7 +29,20 @@ The code is UGLY, i'm aware of that, started the work this morning and finished 
 So in between having no time and creating this.. well this is what came out, and it works for now :)
 
 
-Examples
+Configuration
+=================
+You can run the script as is, and you'll be promted for all the values needed.
+But if you plan on running this as a cron job (or otherwise as a reoccuring job) i'd suggest (example):
+[code]
+    ___customerID___ = '12345678'
+    ___customerPWD___ = r'my%sparse\pwd'
+    ___domain___ = 'example.se'
+    ___nsserver___ = 'ns1.example.se'
+    ___externalIP___ = None # <- For autodetect
+[/code]
+
+
+Example outputs
 =================
 
 *(assuming you've configured the variables for userid, password, domain and nsserver at the top of the script)*
@@ -49,22 +62,17 @@ root@host:# python iis_domainupdater.py
  - Finding current IP at iis.se and imitating update process
  - Skipping update, external IP is the regisitrered IP at iis.se
 
+
 Running as a CRON job
 =================
 
-The script is ment to be run as a cron job every X ammount of time,
-in order for the cron job to be able to run this script you need to define some variables:
-___customerID___ = ...
-___customerPWD___ = ---
-___domain___ = ...
-___nsserver___ = ...
-___externalIP___ = ...
+1. Follow the configration steps above
 
-Once those are set, do:
-~:# crontab -e
+2. Once those are set, do:
+ - ~:# crontab -e
 
-and append:
-*/5 * * * * /path/to/scrupt/iis_domainupdater.py
+3. and append:
+ - */5 * * * * /path/to/scrupt/iis_domainupdater.py
 
-and make sure you've started ( or in this case, restarted, the cron daemon )
-~:# /etc/init.d/cron restart
+4. and make sure you've started ( or in this case, restarted, the cron daemon )
+ - ~:# /etc/init.d/cron restart
