@@ -47,12 +47,15 @@ Example outputs
 
 *(assuming you've configured the variables for userid, password, domain and nsserver at the top of the script)*
 
+<pre>
 root@host:# python iis_domainupdater.py 
 2012-12-04 23:02:36 - Initated the script
  - Got external IP: 10.133.55.23
  - Imitating login navigation and submission
  - IIS.se is undergoing maintenance, ending the script
+</pre>
 
+<pre>
 root@host:# python iis_domainupdater.py 
 2012-12-04 23:21:30 - Initated the script
  - Got external IP: 10.133.55.23
@@ -61,7 +64,7 @@ root@host:# python iis_domainupdater.py
  - Got new ID for example.se, the ID is 1234567
  - Finding current IP at iis.se and imitating update process
  - Skipping update, external IP is the regisitrered IP at iis.se
-
+</pre>
 
 Running as a CRON job
 =================
@@ -69,10 +72,10 @@ Running as a CRON job
 1. Follow the configration steps above
 
 2. Once those are set, do:
- - ~:# crontab -e
+<pre>~:# crontab -e</pre>
 
 3. and append:
- - */5 * * * * /path/to/scrupt/iis_domainupdater.py
+<pre>*/5 * * * * /path/to/scrupt/iis_domainupdater.py</pre>
 
 4. and make sure you've started ( or in this case, restarted, the cron daemon )
- - ~:# /etc/init.d/cron restart
+<pre>~:# /etc/init.d/cron restart</pre>
