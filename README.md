@@ -36,3 +36,12 @@ root@host:# python iis_domainupdater.py
  - Got external IP: 10.22.0.133
  - Imitating login navigation and submission
  - IIS.se is undergoing maintenance, ending the script
+
+root@host:# python iis_domainupdater.py 
+ - Got external IP: 10.22.0.133
+ - Imitating login navigation and submission
+ - Imitating update process and fetching ID values
+ - Got new ID for example.se, the ID is 1234567
+ - Finding current IP at iis.se and imitating update process
+ - Skipping update, external IP is the regisitrered IP at iis.se
+
