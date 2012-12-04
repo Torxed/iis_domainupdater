@@ -1,4 +1,4 @@
-import socket, ssl
+import socket, ssl, re
 from sys import argv
 from threading import *
 from os import _exit
@@ -6,43 +6,38 @@ from time import sleep, time, strftime
 from urllib import urlencode, quote_plus
 from getpass import getpass
 
+__date__ = '2012-12-04 21:15 CET'
 __version__ = 0.1
-__author__ = 'Anton Hvornum <antonATgmail>'
-__customerID__ = '13019837'
-# == Feel free to set __customerPWD__ in order for the script to
-# == skip asking you for a password, taking sys.argv[1] is a bad idea
-# == unless you're sure how to pass all those special characters in your
-# == password to the python interpretater.
-# == (Because you do have a strong password right with & and \)
-__customerPWD__ = None
-if not __customerPWD__:
-	__customerPWD__ = getpass()
-__nsserver__ = 'ns1.hvornum.se'
-__nameserverID__ = None
-__domain__ = 'hvornum.se'
+__author__ = 'Anton Hvornum - http://www.linkedin.com/profile/view?id=140957723'
+
+## ================== Explanation of the different variables ===================
+## ==                                                                         ==
+## = __customerID__ - It's the customer ID number you've recieved from iis,    =
+## =                  normally it's just a 8 digit number, we'll use it as     =
+## =                  a username when we authenticate.                         =
+## = __customerPWD__ - This is your password belonging to __customerID__       =
+## = __domain__ - Which domain are you trying to update? we need this to find  =
+## =              the domain-id that iis has given you.                        =
+## = __nsserver__ - Which nameserver do you want to update the IP of?          =
+## =                normally there should be at least 2 name-servers for each  =
+## =                domain, and they should be on different servers so in      =
+## =                order for the script to update the correct nameserver,     =
+## =                enter the nameserver that this script will run on.         =
+## = __externalIP__ - It's as simple as to what is your external IP?           =
+## =                  The script will try to determain the extnernal IP for    =
+## =                  you but if you want, you can always make it static here. =
+## =============================================================================
+
+__customerID__ = None
+__customerPWD__ = None # example: r'this\is&a%super;password' escapes %s etc
+__domain__ = None
+__nsserver__ = None
+__externalIP__ = None
+
+## == These are values that we'll scan for later on, so do not set these!
+## == (unless you know what you're doing!)
 __domainid__ = -1
-__externalIP__ = '85.227.193.213'
-
-base = {
-		'host' : 'domanhanteraren.iis.se',
-		'target' : '/',
-		'type' : 'GET',
-		'form' : {},
-}
-
-logindata = {
-			'host' : 'domanhanteraren.iis.se',
-			'target' : '/start/login',
-			'type' : 'POST',
-			'form' : {'username' : __customerID__, 'password' : __customerPWD__, 'login' : 'Logga in'}
-			}
-
-getdomains = {
-		'host' : 'domanhanteraren.iis.se',
-		'target' : '/domains',
-		'type' : 'GET',
-		'form' : {},
-}
+__nameserverID__ = None
 
 def refstr(s):
 	while len(s) > 1 and s[0] in (' ', '	', ':', ',', '\r', '\n', '"', "'"):
@@ -50,6 +45,28 @@ def refstr(s):
 	while len(s) > 1 and s[-1] in (' ', '	', ':', ',', '\r', '\n', '"', "'"):
 		s = s[:-1]
 	return s
+
+if not __customerID__ and not __customerPWD__:
+	print ' * Note:  You can always set \'__customerID__\' (and \'__customerPWD__\')'
+if not __customerID__:
+	__customerID__ = refstr(raw_input('Enter your IIS customer number (ex 12345678): '))
+if not __customerPWD__:
+	__customerPWD__ = getpass()
+if not __domain__:
+	__domain__ = refstr(raw_input('Enter your domainname to update (example.se): '))
+if not __nsserver__:
+	__nsserver__ = refstr(raw_input('Enter the nameserver to update (ns1.example.se): '))
+if not __externalIP__:
+	s = socket.socket()
+	s.connect(('automation.whatismyip.com', 80))
+	s.send('GET /n09230945.asp HTTP/1.1\r\nHost: automation.whatismyip.com\r\n\r\n')
+	ips = re.findall(r'[0-9]+(?:\.[0-9]+){3}', s.recv(8192))
+	s.close()
+	if type(ips) == list and len(ips) == 1:
+		__externalIP__ = refstr(str(ips[0]))
+	else:
+		__externalIP__ = refstr(str(ips))
+	print ' - Got external IP: ' + str(__externalIP__)
 
 class nonblockingrecieve(Thread):
 	def __init__(self, sock):
@@ -282,9 +299,59 @@ def getUpdateID(data):
 			return ret	
 	return ret
 
+def getCurrentIp(data):
+	inpnamepos = data.find('name="update_ip"')
+	valuestart = data.find('value="',inpnamepos)+7
+	valueend = data.find('"', valuestart+2)
+	return refstr(data[valuestart:valueend])
+
+
+## == Quick explanation of the syntax of the dictionary data,
+## == the data is passed to the http class as http.htmldata
+## == when you later on call http.navigate() the function
+## == will take the dictionary you've supplied and build it to
+## == standard HTTP formated data.
+## == host, target and type must be present at all times,
+## == form is optional unless you make the type - 'POST', then it's required.
+## ==
+## == Here are three basic HTTP dictionaries we can pass to http().htmldata
+## == and which will simulate the actual login process (click for click):
+
+base = {
+		'host' : 'domanhanteraren.iis.se',
+		'target' : '/',
+		'type' : 'GET',
+		'form' : {},
+}
+
+logindata = {
+			'host' : 'domanhanteraren.iis.se',
+			'target' : '/start/login',
+			'type' : 'POST',
+			'form' : {'username' : __customerID__,
+						'password' : __customerPWD__,
+						'login' : 'Logga in'}
+			}
+
+getdomains = {
+		'host' : 'domanhanteraren.iis.se',
+		'target' : '/domains',
+		'type' : 'GET',
+		'form' : {},
+}
+
+
+## == Lets begin the process of signing in, getting the required ID's and
+## == then last but not least, update the IP (if nessescary, otherwise end)
+
+
 print ' - Imitating login navigation and submission'
 http = httplib(base)
-http.navigate()
+headers, data = http.navigate()
+
+if 'maintenance' in data.lower():
+	print ' - IIS.se is undergoing maintenance, ending the script'
+	_exit(0)
 
 http.htmldata = logindata
 http.navigate()
@@ -294,6 +361,7 @@ print ' - Imitating update process and fetching ID values'
 if __domainid__ == -1:
 	http.htmldata = getdomains
 	domaindata = getdomain(http.navigate()[1])
+	print domaindata
 	print ' - Got new ID for ' + domaindata['title'] + ', the ID is ' + domaindata['id']
 	__domainid__ = domaindata['id']
 
@@ -339,23 +407,17 @@ updatedata = {
 			'form' : {'id' : __domainid__, 'hid' : __nameserverID__, 'upd_id' : __updateid__, 'update_ip' : __externalIP__, 'update' : 'Uppdatera'}
 			}
 
-def getCurrentIp(data):
-	inpnamepos = data.find('name="update_ip"')
-	valuestart = data.find('value="',inpnamepos)+7
-	valueend = data.find('"', valuestart+2)
-	return refstr(data[valuestart:valueend])
-
 currentRegisteredIp = getCurrentIp(data)
 if __externalIP__ == currentRegisteredIp:
 	print ' - Skipping update, external IP is the regisitrered IP at iis.se'
 else:
 	print ' - Updating nameserver ' + __nsserver__ + ' to ' + __externalIP__
 	http.htmldata = updatedata
-	headers, data = http.navigate()
+	#headers, data = http.navigate()
 
-	f=open('dump.html', 'wb')
-	f.write(data)
-	f.close()
+	#f=open('dump.html', 'wb')
+	#f.write(data)
+	#f.close()
 
 for t in enumerate():
 	try:
