@@ -1,13 +1,19 @@
 import socket, ssl, re
-from sys import argv
+from sys import argv, stdout
 from threading import *
 from os import _exit
+from os.path import isfile
 from time import sleep, time, strftime
 from urllib import urlencode, quote_plus
 from getpass import getpass
 
-__date__ = '2012-12-04 21:52 CET'
-__version__ = 0.1
+ostdout = stdout
+## = Added the stdout redirect to simplify the output to a log file
+## = in case you run this script as a cron job (which, is a good idea)
+stdout = open('/var/log/iis_domainupdater.log', 'ab')
+
+__date__ = '2012-12-04 23:35 CET'
+__version__ = 0.2
 __author__ = 'Anton Hvornum - http://www.linkedin.com/profile/view?id=140957723'
 
 ## ================== Explanation of the different variables ===================
@@ -28,6 +34,9 @@ __author__ = 'Anton Hvornum - http://www.linkedin.com/profile/view?id=140957723'
 ## =                  you but if you want, you can always make it static here. =
 ## =============================================================================
 
+print strftime('%Y-%m-%d %H:%M:%S - Initated the script')
+stdout.flush()
+
 __customerID__ = None
 __customerPWD__ = None # example: r'this\is&a%super;password' escapes %s etc
 __domain__ = None
@@ -38,6 +47,7 @@ __externalIP__ = None
 ## == (unless you know what you're doing!)
 __domainid__ = -1
 __nameserverID__ = None
+__lastknown__ = None
 
 def refstr(s):
 	while len(s) > 1 and s[0] in (' ', '	', ':', ',', '\r', '\n', '"', "'"):
@@ -48,6 +58,7 @@ def refstr(s):
 
 if not __customerID__ and not __customerPWD__:
 	print ' * Note:  You can always set \'__customerID__\' (and \'__customerPWD__\')'
+	stdout.flush()
 if not __customerID__:
 	__customerID__ = refstr(raw_input('Enter your IIS customer number (ex 12345678): '))
 if not __customerPWD__:
@@ -67,6 +78,12 @@ if not __externalIP__:
 	else:
 		__externalIP__ = refstr(str(ips))
 	print ' - Got external IP: ' + str(__externalIP__)
+	stdout.flush()
+if isfile('lastknown_ip_iis.conf'):
+	f = open('lastknown_ip_iis.conf', 'rb')
+	__lastknown__ = refstr(f.read())
+	f.close()
+
 
 class nonblockingrecieve(Thread):
 	def __init__(self, sock):
@@ -106,6 +123,7 @@ class httplib():
 		headers = {}
 		if not '\r\n\r\n' in data:
 			print 'Bad data:',[data]
+			stdout.flush()
 			return None, None
 		head, data = data.split('\r\n\r\n',1)
 		for row in head.split('\r\n'):
@@ -174,6 +192,7 @@ class httplib():
 			postdata = self.postformat()
 			if not postdata:
 				print 'Problem formatting the POST data'
+				stdout.flush()
 				return None
 			outdata += 'Content-Length: ' + str(len(postdata)) + '\r\n'
 			outdata += 'Content-Type: application/x-www-form-urlencoded\r\n'
@@ -328,23 +347,26 @@ getdomains = {
 
 
 print ' - Imitating login navigation and submission'
+stdout.flush()
 http = httplib(base)
 headers, data = http.navigate()
 
 if 'maintenance' in data.lower():
 	print ' - IIS.se is undergoing maintenance, ending the script'
+	stdout.flush()
 	_exit(0)
 
 http.htmldata = logindata
 http.navigate()
 
 print ' - Imitating update process and fetching ID values'
+stdout.flush()
 
 if __domainid__ == -1:
 	http.htmldata = getdomains
 	domaindata = getdomain(http.navigate()[1])
-	print domaindata
 	print ' - Got new ID for ' + domaindata['title'] + ', the ID is ' + domaindata['id']
+	stdout.flush()
 	__domainid__ = domaindata['id']
 
 getdomainviaid = {
@@ -378,6 +400,7 @@ getupdatenameserverpage = {
 }
 
 print ' - Finding current IP at iis.se and imitating update process'
+stdout.flush()
 
 http.htmldata = getupdatenameserverpage
 headers, data = http.navigate()
@@ -392,14 +415,21 @@ updatedata = {
 currentRegisteredIp = getCurrentIp(data)
 if __externalIP__ == currentRegisteredIp:
 	print ' - Skipping update, external IP is the regisitrered IP at iis.se'
+	stdout.flush()
 else:
 	print ' - Updating nameserver ' + __nsserver__ + ' to ' + __externalIP__
+	stdout.flush()
 	http.htmldata = updatedata
 	headers, data = http.navigate()
 
 	#f=open('dump.html', 'wb')
 	#f.write(data)
 	#f.close()
+
+if __externalIP__:
+	f = open('lastknown_ip_iis.conf', 'wb')
+	f.write(__externalIP__)
+	f.close()
 
 for t in enumerate():
 	try:
