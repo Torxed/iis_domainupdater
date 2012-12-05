@@ -36,8 +36,8 @@ But if you plan on running this as a cron job (or otherwise as a reoccuring job)
 ```python
     ___customerID___ = '12345678'
     ___customerPWD___ = r'my%sparse\pwd'
-    ___domain___ = 'example.se'
-    ___nsserver___ = 'ns1.example.se'
+    ___domain___ = 'exempel.se'
+    ___nsserver___ = 'ns1.exempel.se'
     ___externalIP___ = None # <- For autodetect
 ```
 __This configuration works with the nameserver setup:__
@@ -63,7 +63,7 @@ root@host:# python iis_domainupdater.py
  - Got external IP: 10.133.55.23
  - Imitating login navigation and submission
  - Imitating update process and fetching ID values
- - Got new ID for example.se, the ID is 1234567
+ - Got new ID for exempel.se, the ID is 1234567
  - Finding current IP at iis.se and imitating update process
  - Skipping update, external IP is the regisitrered IP at iis.se
 </pre>
