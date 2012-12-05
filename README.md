@@ -40,6 +40,8 @@ But if you plan on running this as a cron job (or otherwise as a reoccuring job)
     ___nsserver___ = 'ns1.example.se'
     ___externalIP___ = None # <- For autodetect
 ```
+__This configuration works with the nameserver setup:__
+![My image](https://lh3.googleusercontent.com/-i1cuSLcuxXXAFfCqBAVHhkSEHo5W4lJQ-3Hm1ls9xzrWKlPlpVEtLiHh4eZh3QSKam5H5A5bPU)
 
 
 Example outputs
