@@ -13,7 +13,7 @@ from logger import log
 sys.stdout = open('/var/log/iis_domainupdater.log', 'ab')
 
 __date__ = '2012-06-12 00:20 CET'
-__version__ = 0.3.1
+__version__ = '0.3.1'
 __author__ = 'Anton Hvornum - http://www.linkedin.com/profile/view?id=140957723'
 
 print strftime('%Y-%m-%d %H:%M:%S - Initated the script')
@@ -357,7 +357,7 @@ class pages():
 				'host' : 'domanhanteraren.iis.se',
 				'target' : '/domains/details/editns/updateip',
 				'type' : 'POST',
-				'form' : {'id' : __domainid__, 'hid' : __nameserverID__, 'upd_id' : __updateid__, 'update_ip' : __externalIP__, 'update' : 'Uppdatera'}
+				'form' : {'id' : __domainid__, 'hid' : __nameserverID__, 'upd_id' : __updateid__, 'update_ip' : __externalIP__, 'update' : 'Uppdatera'},
 				'inform' : ' - Updating the IP on iis.se to ' + __externalIP__,
 				}
 
