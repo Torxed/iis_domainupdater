@@ -41,7 +41,7 @@ But if you plan on running this as a cron job (or otherwise as a reoccuring job)
     ___externalIP___ = None # <- For autodetect
 ```
 __This configuration works with the nameserver setup:__
-![My image](https://docs.google.com/uc?export=download&id=id=0B1eeO3A_DUEtWUtQRFlDM2gzckk)
+![My image](https://drive.google.com/uc?export=download&id=0B1eeO3A_DUEtWUtQRFlDM2gzckk)
 
 
 Example outputs
