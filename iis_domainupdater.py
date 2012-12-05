@@ -6,54 +6,34 @@ from os.path import isfile
 from time import sleep, time, strftime
 from urllib import urlencode, quote_plus
 from getpass import getpass
+from logger import log
 
 ## = Added the stdout redirect to simplify the output to a log file
 ## = in case you run this script as a cron job (which, is a good idea)
 sys.stdout = open('/var/log/iis_domainupdater.log', 'ab')
 
-__date__ = '2012-05-12 01:48 CET'
-__version__ = 0.3
+__date__ = '2012-06-12 00:08 CET'
+__version__ = 0.3.1
 __author__ = 'Anton Hvornum - http://www.linkedin.com/profile/view?id=140957723'
-
-## ================== Explanation of the different variables ===================
-## ==                                                                         ==
-## = __customerID__ - It's the customer ID number you've recieved from iis,    =
-## =                  normally it's just a 8 digit number, we'll use it as     =
-## =                  a username when we authenticate.                         =
-## = __customerPWD__ - This is your password belonging to __customerID__       =
-## = __domain__ - Which domain are you trying to update? we need this to find  =
-## =              the domain-id that iis has given you.                        =
-## = __nsserver__ - Which nameserver do you want to update the IP of?          =
-## =                normally there should be at least 2 name-servers for each  =
-## =                domain, and they should be on different servers so in      =
-## =                order for the script to update the correct nameserver,     =
-## =                enter the nameserver that this script will run on.         =
-## = __externalIP__ - It's as simple as to what is your external IP?           =
-## =                  The script will try to determain the extnernal IP for    =
-## =                  you but if you want, you can always make it static here. =
-## =============================================================================
 
 print strftime('%Y-%m-%d %H:%M:%S - Initated the script')
 sys.stdout.flush()
 
-__customerID__ = None
-__customerPWD__ = None # example: r'this\is&a%super;password' escapes %s etc
-__domain__ = None
-__nsserver__ = None
-__externalIP__ = None
+if isfile('config.py'):
+	from config import *
+else:
+	## =============== Change these in: config.py !!!
+	##
+	__customerID__, __customerPWD__, __domain__ = (None, None, None)
+	__externalIP__, __nsserver__, __lastknown__ = (None, None, None)
 
 ## == These are values that we'll scan for later on, so do not set these!
 ## == (unless you know what you're doing!)
 __domainid__ = -1
 __nameserverID__ = None
-__lastknown__ = None
 
 def refstr(s):
-	while len(s) > 1 and s[0] in (' ', '	', ':', ',', '\r', '\n', '"', "'"):
-		s = s[1:]
-	while len(s) > 1 and s[-1] in (' ', '	', ':', ',', '\r', '\n', '"', "'"):
-		s = s[:-1]
-	return s
+	return s.strip(" \t:,\r\n\"'")
 
 if not __customerID__ and not __customerPWD__:
 	print ' * Note:  You can always set \'__customerID__\' (and \'__customerPWD__\')'
@@ -86,7 +66,6 @@ if __lastknown__ and __lastknown__ == __externalIP__:
 	print ' - External IP matches the last known IP on IIS.se, ending the script'
 	sys.stdout.flush()
 	_exit(0)
-
 
 class nonblockingrecieve(Thread):
 	def __init__(self, sock):
@@ -184,6 +163,8 @@ class httplib():
 		return outdata
 
 	def navigate(self):
+		if 'inform' in self.htmldata and self.htmldata['inform']:
+			log(self.htmldata['inform'])
 		outdata = ''
 		postdata = None
 
@@ -250,6 +231,8 @@ def getdomain(data):
 			retmap['id'] = _id
 		else:
 			retmap[key] = val
+	log(' - Got new ID for ' + retmap['title'] + ', the ID is ' + retmap['id'])
+	__domainid__ = domaindata['id']
 	return retmap
 
 def getediturl(data):
@@ -275,6 +258,7 @@ def getediturl(data):
 					k, v = values.split('=',1)
 					k, v = refstr(k), refstr(v)
 					ret[k] = v
+			__nameserverID__ = ret['hid']
 			return ret
 
 def getUpdateID(data):
@@ -300,139 +284,111 @@ def getUpdateID(data):
 					k, v = values.split('=',1)
 					k, v = refstr(k), refstr(v)
 					ret[k] = v
+			__updateid__ = ret['upd_id']
 			return ret	
-	return ret
 
 def getCurrentIp(data):
 	inpnamepos = data.find('name="update_ip"')
 	valuestart = data.find('value="',inpnamepos)+7
 	valueend = data.find('"', valuestart+2)
+	f = open('lastknown_ip_iis.conf', 'wb')
+	f.write(data[valuestart:valueend])
+	f.close()
 	return refstr(data[valuestart:valueend])
 
+class pages():
+	def __init__(self):
+		pass
+	def root(self):
+		return {
+				'host' : 'domanhanteraren.iis.se',
+				'target' : '/',
+				'type' : 'GET',
+				'form' : {},
+				'inform' : ' - Imitating login navigation',
+				}
 
-## == Quick explanation of the syntax of the dictionary data,
-## == the data is passed to the http class as http.htmldata
-## == when you later on call http.navigate() the function
-## == will take the dictionary you've supplied and build it to
-## == standard HTTP formated data.
-## == host, target and type must be present at all times,
-## == form is optional unless you make the type - 'POST', then it's required.
-## ==
-## == Here are three basic HTTP dictionaries we can pass to http().htmldata
-## == and which will simulate the actual login process (click for click):
+	def loginpage(self):
+		return {
+				'host' : 'domanhanteraren.iis.se',
+				'target' : '/start/login',
+				'type' : 'POST',
+				'form' : {'username' : __customerID__,
+							'password' : __customerPWD__,
+							'login' : 'Logga in'},
+				'inform' : ' - Sending logininformation',
+				}
+	def getdomains(self):
+		return {
+				'host' : 'domanhanteraren.iis.se',
+				'target' : '/domains',
+				'type' : 'GET',
+				'form' : {},
+				'inform' : ' - Getting domainname ID',
+				}
+	def getnameservers(self):
+		return {
+				'host' : 'domanhanteraren.iis.se',
+				'target' : '/domains/details/nameservers?id=' + __domainid__,
+				'type' : 'GET',
+				'form' : {},
+				'inform' : ' - Getting nameserver ID',
+				}
 
-base = {
-		'host' : 'domanhanteraren.iis.se',
-		'target' : '/',
-		'type' : 'GET',
-		'form' : {},
-}
+	def geteditnameserver(self):
+		return {
+				'host' : 'domanhanteraren.iis.se',
+				'target' : '/domains/details/editns?' + 'id=' + __domainid__ + '&hid=' + __nameserverID__,
+				'type' : 'GET',
+				'form' : {},
+				'inform' : ' - Getting IP edit link ID',
+				}
 
-logindata = {
-			'host' : 'domanhanteraren.iis.se',
-			'target' : '/start/login',
-			'type' : 'POST',
-			'form' : {'username' : __customerID__,
-						'password' : __customerPWD__,
-						'login' : 'Logga in'}
-			}
+	def getcurrentiponnameserver(self):
+		return {
+				'host' : 'domanhanteraren.iis.se',
+				'target' : '/domains/details/editns/updateip?' + 'id=' + __domainid__ + '&hid=' + __nameserverID__ + '&upd_id=' + __updateid__,
+				'type' : 'GET',
+				'form' : {},
+				'inform' : ' - Finding current IP at iis.se',
+				}
+	def updatedata(self):
+		return {
+				'host' : 'domanhanteraren.iis.se',
+				'target' : '/domains/details/editns/updateip',
+				'type' : 'POST',
+				'form' : {'id' : __domainid__, 'hid' : __nameserverID__, 'upd_id' : __updateid__, 'update_ip' : __externalIP__, 'update' : 'Uppdatera'}
+				'inform' : ' - Updating the IP on iis.se to ' + __externalIP__,
+				}
 
-getdomains = {
-		'host' : 'domanhanteraren.iis.se',
-		'target' : '/domains',
-		'type' : 'GET',
-		'form' : {},
-}
+## Pages is a class to build and return
+## dictionary data used by the .navigate() function.
+pages = Pages()
 
+http = httplib(pages.root())
+if 'maintenance' in http.navigate()[1]: # in data, headers = [0]
+	log(' - IIS.se is undergoing maintenance, ending the script', True)
 
-## == Lets begin the process of signing in, getting the required ID's and
-## == then last but not least, update the IP (if nessescary, otherwise end)
-
-
-print ' - Imitating login navigation and submission'
-sys.stdout.flush()
-http = httplib(base)
-headers, data = http.navigate()
-
-if 'maintenance' in data.lower():
-	print ' - IIS.se is undergoing maintenance, ending the script'
-	sys.stdout.flush()
-	_exit(0)
-
-http.htmldata = logindata
+http.htmldata = pages.loginpage()
 http.navigate()
 
-print ' - Imitating update process and fetching ID values'
-sys.stdout.flush()
-
 if __domainid__ == -1:
-	http.htmldata = getdomains
-	domaindata = getdomain(http.navigate()[1])
-	print ' - Got new ID for ' + domaindata['title'] + ', the ID is ' + domaindata['id']
-	sys.stdout.flush()
-	__domainid__ = domaindata['id']
+	http.htmldata = pages.getdomains()
+	getdomain(http.navigate()[1])
 
-getdomainviaid = {
-		'host' : 'domanhanteraren.iis.se',
-		'target' : '/domains/details/nameservers?id=' + __domainid__,
-		'type' : 'GET',
-		'form' : {},
-}
-http.htmldata = getdomainviaid
-headers, data = http.navigate()
-nameserverdata = getediturl(data)
-__nameserverID__ = nameserverdata['hid']
+http.htmldata = pages.getnameservers()
+getediturl(http.navigate()[1])
 
-geteditpage = {
-		'host' : 'domanhanteraren.iis.se',
-		'target' : '/domains/details/editns?' + 'id=' + __domainid__ + '&hid=' + __nameserverID__,
-		'type' : 'GET',
-		'form' : {},
-}
+http.htmldata = pages.geteditnameserver()
+getUpdateID(http.navigate()[1])
 
-http.htmldata = geteditpage
-headers, data = http.navigate()
-updatedata = getUpdateID(data)
-__updateid__ = updatedata['upd_id']
-
-getupdatenameserverpage = {
-		'host' : 'domanhanteraren.iis.se',
-		'target' : '/domains/details/editns/updateip?' + 'id=' + __domainid__ + '&hid=' + __nameserverID__ + '&upd_id=' + __updateid__,
-		'type' : 'GET',
-		'form' : {},
-}
-
-print ' - Finding current IP at iis.se and imitating update process'
-sys.stdout.flush()
-
-http.htmldata = getupdatenameserverpage
-headers, data = http.navigate()
-
-updatedata = {
-			'host' : 'domanhanteraren.iis.se',
-			'target' : '/domains/details/editns/updateip',
-			'type' : 'POST',
-			'form' : {'id' : __domainid__, 'hid' : __nameserverID__, 'upd_id' : __updateid__, 'update_ip' : __externalIP__, 'update' : 'Uppdatera'}
-			}
-
-currentRegisteredIp = getCurrentIp(data)
+http.htmldata = pages.getcurrentiponnameserver()
+currentRegisteredIp = getCurrentIp(http.navigate()[1])
 if __externalIP__ == currentRegisteredIp:
-	print ' - Skipping update, external IP is the regisitrered IP at iis.se'
-	sys.stdout.flush()
+	log(' - Skipping update, external IP is the regisitrered IP at iis.se', True)
 else:
-	print ' - Updating nameserver ' + __nsserver__ + ' to ' + __externalIP__
-	sys.stdout.flush()
-	http.htmldata = updatedata
-	headers, data = http.navigate()
-
-	#f=open('dump.html', 'wb')
-	#f.write(data)
-	#f.close()
-
-if __externalIP__:
-	f = open('lastknown_ip_iis.conf', 'wb')
-	f.write(__externalIP__)
-	f.close()
+	http.htmldata = pages.updatedata()
+	http.navigate()
 
 for t in enumerate():
 	try:
