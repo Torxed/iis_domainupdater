@@ -12,7 +12,7 @@ from logger import log
 ## = in case you run this script as a cron job (which, is a good idea)
 sys.stdout = open('/var/log/iis_domainupdater.log', 'ab')
 
-__date__ = '2012-06-12 00:08 CET'
+__date__ = '2012-06-12 00:20 CET'
 __version__ = 0.3.1
 __author__ = 'Anton Hvornum - http://www.linkedin.com/profile/view?id=140957723'
 
