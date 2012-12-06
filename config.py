@@ -16,9 +16,10 @@
 ## =                  you but if you want, you can always make it static here. =
 ## =============================================================================
 
-__customerID__ = None
-__customerPWD__ = None # example: r'this\is&a%super;password' escapes %s etc
-__domain__ = None
-__nsserver__ = None
-__externalIP__ = None
-__lastknown__ = None
+class conf():
+	__customerID__ = None
+	__customerPWD__ = None # example: r'this\is&a%super;password' escapes %s etc
+	__domain__ = None
+	__nsserver__ = None
+	__externalIP__ = None
+	__lastknown__ = None
