@@ -12,8 +12,8 @@ from logger import log
 ## = in case you run this script as a cron job (which, is a good idea)
 sys.stdout = open('/var/log/iis_domainupdater.log', 'ab')
 
-__date__ = '2012-06-12 01:09 CET'
-__version__ = '0.3.2'
+__date__ = '2012-06-12 01:10 CET'
+__version__ = '0.3.3'
 __author__ = 'Anton Hvornum - http://www.linkedin.com/profile/view?id=140957723'
 
 log(strftime('%Y-%m-%d %H:%M:%S - Initated the script'))
